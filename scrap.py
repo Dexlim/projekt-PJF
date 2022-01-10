@@ -33,8 +33,7 @@ def checkPriceRequest(title):
         if (keyshopPrice.startswith('~')):
             keyshopPrice = keyshopPrice[1:]
 
-        result = ("\nGame: "+title+"\nOfficial stores: \t" + officialPrice + "\nKeyshops: \t\t\t" + keyshopPrice+"\n"+link+"\n")
-        print(result)
+        result = ("\n__**"+title+"**__\nOfficial stores: \t" + officialPrice + "\nKeyshops: \t\t\t" + keyshopPrice+"\n"+link+"\n")
         resultList.append(result)
         counter = counter + 1
         if(counter>=5):
