@@ -38,5 +38,7 @@ def checkPriceRequest(title):
         counter = counter + 1
         if(counter>=5):
             return resultList
+    if len(resultList)<1:
+        resultList.append("Not found.\n")
     return resultList
 
