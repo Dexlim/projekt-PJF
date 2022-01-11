@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
 
-
 def checkPriceRequest(title):
     page_url = "https://gg.deals/games/?title=" + title
     page = requests.get(page_url)
@@ -35,6 +34,7 @@ def checkPriceRequest(title):
 
         result = ("\n__**"+title+"**__\nOfficial stores: \t" + officialPrice + "\nKeyshops: \t\t\t" + keyshopPrice+"\n"+link+"\n")
         resultList.append(result)
+
         counter = counter + 1
         if(counter>=5):
             return resultList
