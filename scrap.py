@@ -21,7 +21,7 @@ class Request():
         self.image = image
         self.link = link
 
-class Freebie():
+class Info():
     def __init__(self,link,image,title,info):
         self.link = link
         self.image = image
@@ -89,10 +89,42 @@ def checkFreebies():
         image = freebie.find('div',{'class':'news-image-wrapper'}).find('img')['src']
         title =  freebie.find('h3',{'class':'news-title'}).find('a').get_text()
         info = freebie.find('div',{'class':'news-lead'}).get_text()
-        freebie = Freebie(link,image,title,info)
+        freebie = Info(link, image, title, info)
         freebiesList.append(freebie)
     return freebiesList
 
+@to_thread
+def checkBundles():
+    page_url = "https://gg.deals/news/bundles/"
+    page = requests.get(page_url)
+    soup = BeautifulSoup(page.content, features="html.parser")
+    bundlesList = []
+    soup = soup.find('div', {'class': 'list-items news-list'})
+    print(soup)
+    for bundle in soup.findAll('div', {'class': 'item news-item news-list-item init-trimNewsLead news-cat-bundle active'}):
+        link = "https://gg.deals" + bundle.find('a',{'class':'full-link'})['href']
+        image = bundle.find('div',{'class':'news-image-wrapper'}).find('img')['src']
+        title = bundle.find('h3',{'class':'news-title'}).find('a').get_text()
+        info = bundle.find('div',{'class':'news-lead'}).get_text()
+        bundle = Info(link, image, title, info)
+        bundlesList.append(bundle)
+    return bundlesList
 
+@to_thread
+def checkDeals():
+    page_url = "https://gg.deals/news/deals/"
+    page = requests.get(page_url)
+    soup = BeautifulSoup(page.content, features="html.parser")
+    dealsList = []
+    soup = soup.find('div', {'class': 'list-items news-list'})
+    print(soup)
+    for deal in soup.findAll('div', {'class': 'item news-item news-list-item init-trimNewsLead news-cat-deal active'}):
+        link = "https://gg.deals" + deal.find('a',{'class':'full-link'})['href']
+        image = deal.find('div',{'class':'news-image-wrapper'}).find('img')['src']
+        title = deal.find('h3',{'class':'news-title'}).find('a').get_text()
+        info = deal.find('div',{'class':'news-lead'}).get_text()
+        deal = Info(link, image, title, info)
+        dealsList.append(deal)
+    return dealsList
 
 

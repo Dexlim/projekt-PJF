@@ -1,6 +1,6 @@
 import discord
 from scrap import Request
-from scrap import Freebie
+from scrap import Info
 
 def createGameEmbed(Request,page,pagemax):
     if(Request.link==''):
@@ -21,11 +21,23 @@ def createGameEmbed(Request,page,pagemax):
         embed.set_footer(text="Page " + str(page) + "/" + str(pagemax))
     return embed
 
-def createInfoEmbed(Freebie,page,pagemax,icon_url):
-    embed = discord.Embed(title=Freebie.title, description=Freebie.info,url=Freebie.link, color=0x7526a6)
+def createInfoEmbed(Freebie,page,pagemax,icon_url,color):
+    embed = discord.Embed(title=Freebie.title, description=Freebie.info,url=Freebie.link, color=color)
     embed.set_author(name="DealsBot", icon_url="https://i.pinimg.com/originals/b2/20/9f/b2209f5436079a03492468a177dccda3.jpg")
     embed.set_image(url=Freebie.image)
-    embed.set_thumbnail(url='https://i.imgur.com/jWvycKR.png')
+    embed.set_thumbnail(url=icon_url)
     if(pagemax>1):
         embed.set_footer(text="Page " + str(page) + "/" + str(pagemax))
+    return embed
+
+def createHelpEmbed():
+    embed = discord.Embed(title="Command List",color=0x0dbd10)
+    embed.set_author(name="DealsBot", icon_url="https://i.pinimg.com/originals/b2/20/9f/b2209f5436079a03492468a177dccda3.jpg")
+    embed.add_field(name="$price [game]",value="Looks for and displays lowest prices of the game in official stores and keyshops ( 3 results )",inline=False)
+    embed.add_field(name="$price-all [game]", value="Looks for and displays lowest prices of the game in official stores and keyshops ( all results )",inline=False)
+    embed.add_field(name="$free", value="Displays posts about new freebies games to claim",inline=False)
+    embed.add_field(name="$bundles", value="Displays posts about new game bundles",inline=False)
+    embed.add_field(name="$deals", value="Displays posts about new deals",inline=False)
+    embed.set_image(url="https://promocja.wat.edu.pl/wp-content/uploads/2014/03/Godlo_WAT_wer.angielska.jpg")
+    embed.set_footer(text="Bot made as a final project for MUT\nWojciech Zalewski WCY19IJ1S1")
     return embed

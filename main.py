@@ -2,16 +2,21 @@ import discord  # pip install discord.py
 from discord.ext.commands import Bot
 from scrap import checkPriceRequest
 from scrap import checkFreebies
+from scrap import checkBundles
+from scrap import checkDeals
 from embed import createGameEmbed
-from  embed import createInfoEmbed
-
+from embed import createInfoEmbed
+from embed import createHelpEmbed
 
 client = Bot("!")
 LEFT = '⬅'
 RIGHT = '➡'
 FREEBIE_ICON = "https://i.imgur.com/jWvycKR.png"
+FREEBIE_COLOR = 0x7526a6
 BUNDLE_ICON = "https://i.imgur.com/EryWDBN.png"
+BUNDLE_COLOR = 0xfca503
 DEALS_ICON = "https://i.imgur.com/KMura7R.png"
+DEALS_COLOR = 0x03b1fc
 
 class Display:
     def __init__(self, message, request,type):
@@ -43,15 +48,14 @@ async def on_message(message):
     global messagesDict
     if message.author == client.user:
         return
+
+
     if message.content.startswith("$help"):
         msg = message.content.split("$help", 1)[1]
         if msg.startswith(" "):
             msg = msg[1:]
-        await message.channel.send("Available commands:\n" +
-                                   "$price [name] - shows lowest prices of [name] game ( 3 top searches )\n" +
-                                   "$price-all [name] - shows lowest prices of [name] game ( all searches )\n"+
-                                   "$free - shows current free games",
-                                   reference=message)
+        await message.channel.send(embed=createHelpEmbed(),reference=message)
+
 
     if message.content.startswith("$price "):
         msg = message.content.split("$price", 1)[1]
@@ -74,14 +78,37 @@ async def on_message(message):
         messagesDict.append(display)
         await response.add_reaction(LEFT)
         await response.add_reaction(RIGHT)
+
+
     if message.content == "$free":
-        response = await message.channel.send(embed=discord.Embed(title="Checking freebies...",color=0x8223e8), reference=message)
+        response = await message.channel.send(embed=discord.Embed(title="Checking freebies...",color=FREEBIE_COLOR), reference=message)
         request = await checkFreebies()
-        await response.edit(embed=createInfoEmbed(request[0], 1, len(request),FREEBIE_ICON))
+        await response.edit(embed=createInfoEmbed(request[0], 1, len(request),FREEBIE_ICON,FREEBIE_COLOR))
         display = Display(response,request,'freebie')
         messagesDict.append(display)
         await response.add_reaction(LEFT)
         await response.add_reaction(RIGHT)
+
+
+    if message.content == "$bundles":
+        response = await message.channel.send(embed=discord.Embed(title="Checking bundles...",color=BUNDLE_COLOR), reference=message)
+        request = await checkBundles()
+        await response.edit(embed=createInfoEmbed(request[0], 1, len(request),BUNDLE_ICON,BUNDLE_COLOR))
+        display = Display(response,request,'bundle')
+        messagesDict.append(display)
+        await response.add_reaction(LEFT)
+        await response.add_reaction(RIGHT)
+
+
+    if message.content == "$deals":
+        response = await message.channel.send(embed=discord.Embed(title="Checking deals...",color=DEALS_COLOR), reference=message)
+        request = await checkDeals()
+        await response.edit(embed=createInfoEmbed(request[0], 1, len(request),DEALS_ICON,DEALS_COLOR))
+        display = Display(response,request,'deal')
+        messagesDict.append(display)
+        await response.add_reaction(LEFT)
+        await response.add_reaction(RIGHT)
+
     await client.process_commands(message)
 
 
@@ -103,7 +130,13 @@ async def on_reaction_add(reaction, user):
             await results.message.edit(embed=createGameEmbed(results.request[results.page - 1], results.page, results.maxPage))
         elif results.type == 'freebie':
             await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
-                                                             results.maxPage,FREEBIE_ICON))
+                                                             results.maxPage,FREEBIE_ICON,FREEBIE_COLOR))
+        elif results.type == 'bundle':
+            await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
+                                                             results.maxPage, BUNDLE_ICON, BUNDLE_COLOR))
+        elif results.type == 'deal':
+            await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
+                                                             results.maxPage, DEALS_ICON, DEALS_COLOR))
         return
 
     if reaction.emoji == RIGHT:
@@ -114,7 +147,13 @@ async def on_reaction_add(reaction, user):
                 embed=createGameEmbed(results.request[results.page-1], results.page, results.maxPage))
         elif results.type == 'freebie':
             await results.message.edit(
-                embed=createInfoEmbed(results.request[results.page - 1], results.page, results.maxPage,FREEBIE_ICON))
+                embed=createInfoEmbed(results.request[results.page - 1], results.page, results.maxPage,FREEBIE_ICON,FREEBIE_COLOR))
+        elif results.type == 'bundle':
+            await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
+                                                             results.maxPage, BUNDLE_ICON, BUNDLE_COLOR))
+        elif results.type == 'deal':
+            await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
+                                                             results.maxPage, DEALS_ICON, DEALS_COLOR))
         return
 
 
