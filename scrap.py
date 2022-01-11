@@ -10,13 +10,13 @@ class Request():
         self.link = link
 
 
-def checkPriceRequest(title):
+def checkPriceRequest(title,maxCounter):
     page_url = "https://gg.deals/games/?title=" + title
     page = requests.get(page_url)
     soup = BeautifulSoup(page.content, features="html.parser")
     counter = 0
     requestList = []
-
+    soup = soup.find('div',{'class':'game-section section-row init-dynamicSidebar'})
     for game in soup.findAll('div', {'class': 'game-details-wrapper'}):
 
         title = game.find('div', {'class': 'game-info-title title'}).get_text()
@@ -50,7 +50,7 @@ def checkPriceRequest(title):
         requestList.append(request)
 
         counter = counter + 1
-        if (counter >= 5):
+        if (counter >= maxCounter):
             return requestList
     if len(requestList) < 1:
         request = Request("Not found",'','','https://is5-ssl.mzstatic.com/image/thumb/Music114/v4/9b/77/16/9b771654-42cf-de94-6e7d-90ccb3587f4f/artwork.jpg/1200x1200bf-60.jpg','')
