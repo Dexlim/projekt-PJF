@@ -37,8 +37,9 @@ async def on_message(message):
 
     if message.content.startswith("$price "):
         msg = message.content.split("$price", 1)[1]
+        response = await message.channel.send(embed=discord.Embed(title="Please wait", color=0xeb5ca0),reference=message)
         request = checkPriceRequest(msg)
-        response = await message.channel.send(embed=createEmbed(request[0],1,len(request)), reference=message)
+        await response.edit(embed=createEmbed(request[0],1,len(request)))
         global messagesDict
         display = Display(response,request)
         messagesDict.append(display)
