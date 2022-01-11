@@ -1,5 +1,17 @@
 from bs4 import BeautifulSoup
 import requests
+import asyncio
+from functools import partial, wraps
+import io
+import aiohttp
+
+def to_thread(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        callback = partial(func, *args, **kwargs)
+        return await loop.run_in_executor(None, callback)  # if using python 3.9+ use `await asyncio.to_thread(callback)`
+    return wrapper
 
 class Request():
     def __init__(self,title,officialPrice,keyshopPrice,image,link):
@@ -9,7 +21,15 @@ class Request():
         self.image = image
         self.link = link
 
+class Freebie():
+    def __init__(self,link,image,title,info):
+        self.link = link
+        self.image = image
+        self.title = title
+        self.info = info
 
+
+@to_thread
 def checkPriceRequest(title,maxCounter):
     page_url = "https://gg.deals/games/?title=" + title
     page = requests.get(page_url)
@@ -56,3 +76,23 @@ def checkPriceRequest(title,maxCounter):
         request = Request("Not found",'','','https://is5-ssl.mzstatic.com/image/thumb/Music114/v4/9b/77/16/9b771654-42cf-de94-6e7d-90ccb3587f4f/artwork.jpg/1200x1200bf-60.jpg','')
         requestList.append(request)
     return requestList
+
+@to_thread
+def checkFreebies():
+    page_url = "https://gg.deals/news/freebies/"
+    page = requests.get(page_url)
+    soup = BeautifulSoup(page.content, features="html.parser")
+    freebiesList = []
+    soup = soup.find('div', {'class': 'list-items news-list'})
+    for freebie in soup.findAll('div', {'class': 'item news-item news-list-item init-trimNewsLead news-cat-freebie active'}):
+        link = "https://gg.deals" + freebie.find('a',{'class':'full-link'})['href']
+        image = freebie.find('div',{'class':'news-image-wrapper'}).find('img')['src']
+        title =  freebie.find('h3',{'class':'news-title'}).find('a').get_text()
+        info = freebie.find('div',{'class':'news-lead'}).get_text()
+        freebie = Freebie(link,image,title,info)
+        freebiesList.append(freebie)
+    return freebiesList
+
+
+
+
