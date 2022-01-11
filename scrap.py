@@ -15,7 +15,6 @@ def checkPriceRequest(title):
     page = requests.get(page_url)
     soup = BeautifulSoup(page.content, features="html.parser")
     counter = 0
-    resultList = []
     requestList = []
 
     for game in soup.findAll('div', {'class': 'game-details-wrapper'}):
@@ -53,7 +52,7 @@ def checkPriceRequest(title):
         counter = counter + 1
         if (counter >= 5):
             return requestList
-    if len(resultList) < 1:
+    if len(requestList) < 1:
         request = Request("Not found",'','','https://is5-ssl.mzstatic.com/image/thumb/Music114/v4/9b/77/16/9b771654-42cf-de94-6e7d-90ccb3587f4f/artwork.jpg/1200x1200bf-60.jpg','')
         requestList.append(request)
     return requestList
