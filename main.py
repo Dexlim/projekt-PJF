@@ -1,16 +1,17 @@
 import discord                           # pip install discord.py
 from scrap import checkPriceRequest
+from embed import createEmbed
 
 client = discord.Client()
 left = '⬅'
 right = '➡'
 
 class Display:
-    def __init__(self, message, result):
+    def __init__(self, message, request):
         self.message = message
-        self.result = result
+        self.request = request
         self.page = 1
-        self.maxPage = len(result)
+        self.maxPage = len(request)
     def changePage(self,numb):
         self.page+=numb
         if self.page<1:
@@ -36,10 +37,10 @@ async def on_message(message):
 
     if message.content.startswith("$price "):
         msg = message.content.split("$price", 1)[1]
-        result = checkPriceRequest(msg)
-        response = await message.channel.send(result[0]+"Page 1/"+str(len(result)), reference=message)
+        request = checkPriceRequest(msg)
+        response = await message.channel.send(embed=createEmbed(request[0],1,len(request)), reference=message)
         global messagesDict
-        display = Display(response,result)
+        display = Display(response,request)
         messagesDict.append(display)
         await response.add_reaction(left)
         await response.add_reaction(right)
@@ -56,12 +57,12 @@ async def on_reaction_add(reaction, user):
     if reaction.emoji == left:
         results.changePage(-1)
         await results.message.remove_reaction(left, user)
-        await results.message.edit(content=results.result[results.page-1]+"Page "+str(results.page)+"/"+str(len(results.result)))
+        await results.message.edit(embed=createEmbed(results.request[results.page-1],results.page,results.maxPage))
         return
     if reaction.emoji == right:
         results.changePage(1)
         await results.message.remove_reaction(right, user)
-        await results.message.edit(content=results.result[results.page-1]+"Page "+str(results.page)+"/"+str(len(results.result)))
+        await results.message.edit(embed=createEmbed(results.request[results.page-1],results.page,results.maxPage))
         return
 
 
