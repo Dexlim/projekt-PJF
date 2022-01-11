@@ -2,15 +2,14 @@ from bs4 import BeautifulSoup
 import requests
 import asyncio
 from functools import partial, wraps
-import io
-import aiohttp
+import lxml
 
 def to_thread(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         loop = asyncio.get_event_loop()
         callback = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(None, callback)  # if using python 3.9+ use `await asyncio.to_thread(callback)`
+        return await loop.run_in_executor(None, callback)
     return wrapper
 
 class Request():
@@ -31,9 +30,8 @@ class Info():
 
 @to_thread
 def checkPriceRequest(title,maxCounter):
-    page_url = "https://gg.deals/games/?title=" + title
-    page = requests.get(page_url)
-    soup = BeautifulSoup(page.content, features="html.parser")
+    page = requests.get("https://gg.deals/games/",params=[('title',title)])
+    soup = BeautifulSoup(page.content, "lxml")
     counter = 0
     requestList = []
     soup = soup.find('div',{'class':'game-section section-row init-dynamicSidebar'})
@@ -44,7 +42,7 @@ def checkPriceRequest(title,maxCounter):
                game.find('a', {'class': 'action-ext action-desktop-btn always-active action-btn cta-label-desktop'})[
                    'href']
         image_page = requests.get(link)
-        soup2 = BeautifulSoup(image_page.content, features="html.parser")
+        soup2 = BeautifulSoup(image_page.content, "lxml")
         image = soup2.find('div',{'class':'game-info-image'}).find('img')['src']
 
         officialPrice = game.find('div', {'class': 'shop-price-wrapper inline shop-price-retail'})
@@ -81,7 +79,7 @@ def checkPriceRequest(title,maxCounter):
 def checkFreebies():
     page_url = "https://gg.deals/news/freebies/"
     page = requests.get(page_url)
-    soup = BeautifulSoup(page.content, features="html.parser")
+    soup = BeautifulSoup(page.content, "lxml")
     freebiesList = []
     soup = soup.find('div', {'class': 'list-items news-list'})
     for freebie in soup.findAll('div', {'class': 'item news-item news-list-item init-trimNewsLead news-cat-freebie active'}):
@@ -97,7 +95,7 @@ def checkFreebies():
 def checkBundles():
     page_url = "https://gg.deals/news/bundles/"
     page = requests.get(page_url)
-    soup = BeautifulSoup(page.content, features="html.parser")
+    soup = BeautifulSoup(page.content, "lxml")
     bundlesList = []
     soup = soup.find('div', {'class': 'list-items news-list'})
     print(soup)
@@ -114,7 +112,7 @@ def checkBundles():
 def checkDeals():
     page_url = "https://gg.deals/news/deals/"
     page = requests.get(page_url)
-    soup = BeautifulSoup(page.content, features="html.parser")
+    soup = BeautifulSoup(page.content, "lxml")
     dealsList = []
     soup = soup.find('div', {'class': 'list-items news-list'})
     print(soup)
