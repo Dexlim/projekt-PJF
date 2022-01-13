@@ -143,8 +143,6 @@ async def on_reaction_add(reaction, user):
         await results.message.remove_reaction(LEFT, user)
         if results.type == 'game':
             await results.message.edit(embed=createGameEmbed(results.request[results.page - 1], results.page, results.maxPage))
-        elif results.type == 'game-low':
-            await results.message.edit(embed=createGameLowEmbed(results.request[results.page - 1], results.page, results.maxPage))
         elif results.type == 'freebie':
             await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
                                                              results.maxPage,FREEBIE_ICON,FREEBIE_COLOR))
