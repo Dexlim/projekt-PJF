@@ -28,9 +28,11 @@ class Info():
         self.info = info
 
 
+
+
 @to_thread
-def checkPriceRequest(title,maxCounter):
-    page = requests.get("https://gg.deals/games/",params=[('title',title)])
+def checkPriceRequest(title,maxCounter,currency):
+    page = requests.get("https://gg.deals/"+currency+"/games/",params=[('title',title)])
     soup = BeautifulSoup(page.content, "lxml")
     counter = 0
     requestList = []
@@ -43,7 +45,7 @@ def checkPriceRequest(title,maxCounter):
                    'href']
         image_page = requests.get(link)
         soup2 = BeautifulSoup(image_page.content, "lxml")
-        image = soup2.find('div',{'class':'game-info-image'}).find('img')['src']
+        image = soup2.find('div', {'class': 'game-info-image'}).find('img')['src']
 
         officialPrice = game.find('div', {'class': 'shop-price-wrapper inline shop-price-retail'})
         officialPrice = officialPrice.find('a', {'class': 'price-content'})
@@ -64,14 +66,16 @@ def checkPriceRequest(title,maxCounter):
         if (keyshopPrice.startswith('~')):
             keyshopPrice = keyshopPrice[1:]
 
-        request = Request(title,officialPrice,keyshopPrice,image,link)
+        request = Request(title, officialPrice, keyshopPrice, image, link)
         requestList.append(request)
 
         counter = counter + 1
         if (counter >= maxCounter):
             return requestList
     if len(requestList) < 1:
-        request = Request("Not found",'','','https://is5-ssl.mzstatic.com/image/thumb/Music114/v4/9b/77/16/9b771654-42cf-de94-6e7d-90ccb3587f4f/artwork.jpg/1200x1200bf-60.jpg','')
+        request = Request("Not found", '', '',
+                          'https://is5-ssl.mzstatic.com/image/thumb/Music114/v4/9b/77/16/9b771654-42cf-de94-6e7d-90ccb3587f4f/artwork.jpg/1200x1200bf-60.jpg',
+                          '')
         requestList.append(request)
     return requestList
 
