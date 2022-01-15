@@ -41,7 +41,7 @@ def createHelpEmbed():
     embed.add_field(name="$currency [currency]", value="Change displayed currency, "
                                                        "available currencies:\nUSD EUR PLN AUD BRL CAD\nDKK "
                                                        "NOK RUB SEK CHF GBP")
-    embed.set_image(url="https://promocja.wat.edu.pl/wp-content/uploads/2014/03/Godlo_WAT_wer.angielska.jpg")
+    embed.set_image(url="https://promocja.wat.edu.pl/wp-content/uploads/2014/03/Godlo_z-nazwa-w-kontaktach-zagranicznych_monochromatyczne.jpg")
     embed.set_footer(text="Bot made as a final project for MUT\nWojciech Zalewski WCY19IJ1S1")
     return embed
 

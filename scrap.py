@@ -41,9 +41,8 @@ def checkPriceRequest(title,maxCounter,currency):
         title = game.select_one('div.game-info-title.title').get_text()
         link = "https://gg.deals" + \
                game.select_one('a.action-ext.action-desktop-btn.always-active.action-btn.cta-label-desktop')['href']
-        image_page = requests.get(link)
-        soup2 = BeautifulSoup(image_page.content, "lxml")
-        image = soup2.select_one('div.game-info-image > img')['src']
+        image = game.find_parent('div').select_one('a.main-image > img')['srcset']
+        image = image[image.find(',')+1:image.find('460w')]
 
         officialPrice = game.select_one('div.shop-price-wrapper.inline.shop-price-retail')
         officialPrice = officialPrice.select_one('a.price-content')
