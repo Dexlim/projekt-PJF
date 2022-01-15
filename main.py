@@ -63,7 +63,7 @@ async def on_message(message):
 
     if message.content.startswith("$price "):
         msg = message.content.split("$price ", 1)[1]
-        response = await message.channel.send(embed=discord.Embed(title="Searching for \""+msg+" \"", color=0xeb5ca0),
+        response = await message.channel.send(embed=discord.Embed(title="Searching for \""+msg+"\"", color=0xeb5ca0),
                                               reference=message)
         request = await checkPriceRequest(msg, 3,CURRENCY)
         await response.edit(embed=createGameEmbed(request[0], 1, len(request)))
@@ -74,7 +74,7 @@ async def on_message(message):
 
     if message.content.startswith("$price-all "):
         msg = message.content.split("$price-all ", 1)[1]
-        response = await message.channel.send(embed=discord.Embed(title="Searching for \""+msg+" \"", color=0xeb5ca0),
+        response = await message.channel.send(embed=discord.Embed(title="Searching for \""+msg+"\"", color=0xeb5ca0),
                                               reference=message)
         request = await checkPriceRequest(msg, 50,CURRENCY)
         await response.edit(embed=createGameEmbed(request[0], 1, len(request)))
