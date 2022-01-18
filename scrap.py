@@ -124,4 +124,20 @@ def checkDeals():
         dealsList.append(deal)
     return dealsList
 
+@to_thread
+def checkBlog():
+    page_url = "https://gg.deals/news/blog/"
+    page = requests.get(page_url)
+    soup = BeautifulSoup(page.content, "lxml")
+    dealsList = []
+    soup = soup.select_one('div.list-items.news-list')
+    for blog in soup.select('div.item.news-item.news-list-item.init-trimNewsLead.news-cat-blog.active'):
+        link = "https://gg.deals" + blog.select_one('a.full-link')['href']
+        image = blog.select_one('div.news-image-wrapper > img')['src']
+        title = blog.select_one('h3.news-title > a').get_text()
+        info = blog.select_one('div.news-lead').get_text()
+        Blog = Info(link, image, title, info)
+        dealsList.append(Blog)
+    return dealsList
+
 

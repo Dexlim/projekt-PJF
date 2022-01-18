@@ -4,6 +4,7 @@ from scrap import checkPriceRequest
 from scrap import checkFreebies
 from scrap import checkBundles
 from scrap import checkDeals
+from scrap import checkBlog
 from embed import createGameEmbed
 from embed import createInfoEmbed
 from embed import createHelpEmbed
@@ -17,6 +18,8 @@ BUNDLE_ICON = "https://i.imgur.com/EryWDBN.png"
 BUNDLE_COLOR = 0xfca503
 DEALS_ICON = "https://i.imgur.com/KMura7R.png"
 DEALS_COLOR = 0x03b1fc
+BLOG_ICON = "https://i.imgur.com/Nu4d5lx.png"
+BLOG_COLOR = 0xc91818
 CURRENCY = 'us';
 AVAILABLE_CURRENCIES = ['USD','EUR','PLN','AUD','BRL','CAD','DKK','NOK','RUB','SEK','CHF','GBP']
 
@@ -113,6 +116,15 @@ async def on_message(message):
         await response.add_reaction(LEFT)
         await response.add_reaction(RIGHT)
 
+    if message.content == "$blog":
+        response = await message.channel.send(embed=discord.Embed(title="Checking blog...",color=BLOG_COLOR), reference=message)
+        request = await checkBlog()
+        await response.edit(embed=createInfoEmbed(request[0], 1, len(request),BLOG_ICON,BLOG_COLOR))
+        display = Display(response,request,'blog')
+        messagesDict.append(display)
+        await response.add_reaction(LEFT)
+        await response.add_reaction(RIGHT)
+
     if message.content.startswith("$currency "):
         msg = message.content.split("$currency ", 1)[1]
         msg = msg.upper()
@@ -152,6 +164,9 @@ async def on_reaction_add(reaction, user):
         elif results.type == 'deal':
             await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
                                                              results.maxPage, DEALS_ICON, DEALS_COLOR))
+        elif results.type == 'blog':
+            await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
+                                                             results.maxPage, BLOG_ICON, BLOG_COLOR))
         return
 
     if reaction.emoji == RIGHT:
@@ -169,6 +184,9 @@ async def on_reaction_add(reaction, user):
         elif results.type == 'deal':
             await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
                                                              results.maxPage, DEALS_ICON, DEALS_COLOR))
+        elif results.type == 'blog':
+            await results.message.edit(embed=createInfoEmbed(results.request[results.page - 1], results.page,
+                                                             results.maxPage, BLOG_ICON, BLOG_COLOR))
         return
 
 

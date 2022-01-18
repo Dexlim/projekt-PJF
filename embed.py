@@ -38,6 +38,7 @@ def createHelpEmbed():
     embed.add_field(name="$free", value="Displays posts about new freebies games to claim",inline=False)
     embed.add_field(name="$bundles", value="Displays posts about new game bundles",inline=False)
     embed.add_field(name="$deals", value="Displays posts about new deals",inline=False)
+    embed.add_field(name="$blog", value="Displays posts from game news blog",inline=False)
     embed.add_field(name="$currency [currency]", value="Change displayed currency, "
                                                        "available currencies:\nUSD EUR PLN AUD BRL CAD\nDKK "
                                                        "NOK RUB SEK CHF GBP")
