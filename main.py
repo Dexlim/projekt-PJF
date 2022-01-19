@@ -1,3 +1,6 @@
+# Projekt na PJF
+# Zalewski Wojciech WCY19IJ1S1
+
 import discord  # pip install discord.py
 from discord.ext.commands import Bot
 from scrap import checkPriceRequest
