@@ -4,10 +4,8 @@ import asyncio
 from functools import partial, wraps
 import urllib.request
 import re
-import urllib.request
 import json
 import urllib
-import pprint
 
 def to_thread(func):
     @wraps(func)
@@ -149,11 +147,14 @@ def checkBlog():
 @to_thread
 def getYoutubeURL(text):
     page_url = "https://youtube.com/results"
-    page = requests.get(page_url, params=[('search_query',text)])
-    html = urllib.request.urlopen(page.url)
-    video_id = re.search(r"watch\?v=(\S{11})",html.read().decode())
-
-    video_id = video_id.group(0).replace("watch?v=","")
+    if text.startswith("https://www.youtube.com/watch?v="):
+        video_id = text.split("https://www.youtube.com/watch?v=")[1]
+        video_id = video_id[0:video_id.find("&ab_channel=")]
+    else:
+        page = requests.get(page_url, params=[('search_query',text)])
+        html = urllib.request.urlopen(page.url)
+        video_id = re.search(r"watch\?v=(\S{11})",html.read().decode())
+        video_id = video_id.group(0).replace("watch?v=","")
 
     params = {"format": "json", "url": "https://www.youtube.com/watch?v=%s" % video_id}
     url = "https://www.youtube.com/oembed"

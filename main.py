@@ -66,6 +66,8 @@ def nextSong(voice, message):
         if not voice.is_playing():
             client.loop.create_task(message.channel.send(content="Queue empty, leaving voice channel."))
             client.loop.create_task(voice.disconnect())
+            currentSong = ''
+            currentTitle = ''
     return
 
 @client.event
@@ -241,12 +243,16 @@ async def on_message(message):
                 return
 
     if message.content == "$queue":
-        msg_content='***1. '+currentTitle+" <-- current***\n"
-        counter = 2
-        for title in titleQueue:
-            msg_content+= str(counter) + ". "+title+"\n"
-            counter+=1
-        await message.channel.send(content=msg_content, reference=message)
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        if voice != None and voice.is_playing():
+            msg_content='***1. '+currentTitle+" <-- current***\n"
+            counter = 2
+            for title in titleQueue:
+                msg_content+= str(counter) + ". "+title+"\n"
+                counter+=1
+            await message.channel.send(content=msg_content, reference=message)
+        else:
+            await message.channel.send(content="Queue empty.", reference=message)
 
     if message.content.startswith("$remove "):
         voice = discord.utils.get(client.voice_clients, guild=message.guild)
