@@ -42,7 +42,15 @@ def createHelpEmbed():
     embed.add_field(name="$currency [currency]", value="Change displayed currency, "
                                                        "available currencies:\nUSD EUR PLN AUD BRL CAD\nDKK "
                                                        "NOK RUB SEK CHF GBP")
-    embed.set_image(url="https://promocja.wat.edu.pl/wp-content/uploads/2014/03/Godlo_z-nazwa-w-kontaktach-zagranicznych_monochromatyczne.jpg")
+    embed.add_field(name="$play [song]", value="Adds song to music queue", inline=False)
+    embed.add_field(name="$pause", value="Pauses music", inline=False)
+    embed.add_field(name="$stop", value="Clears music queue", inline=False)
+    embed.add_field(name="$disconnect", value="Disconnects bot from voice chat", inline=False)
+    embed.add_field(name="$skip", value="Skips current song", inline=False)
+    embed.add_field(name="$queue", value="Shows current song queue", inline=False)
+    embed.add_field(name="$remove [id]", value="Remove song with given id from queue, to check id use $queue", inline=False)
+
     embed.set_footer(text="Bot made as a final project for MUT\nWojciech Zalewski WCY19IJ1S1")
+    embed.set_image(url="https://www.wojsko-polskie.pl/wat/u/fe/79/fe7940a2-19bf-49e9-adb8-22bae104a288/logo_wcy_bg")
     return embed
 

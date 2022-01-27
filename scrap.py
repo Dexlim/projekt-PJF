@@ -2,6 +2,12 @@ from bs4 import BeautifulSoup
 import requests
 import asyncio
 from functools import partial, wraps
+import urllib.request
+import re
+import urllib.request
+import json
+import urllib
+import pprint
 
 def to_thread(func):
     @wraps(func)
@@ -139,5 +145,26 @@ def checkBlog():
         Blog = Info(link, image, title, info)
         dealsList.append(Blog)
     return dealsList
+
+@to_thread
+def getYoutubeURL(text):
+    page_url = "https://youtube.com/results"
+    page = requests.get(page_url, params=[('search_query',text)])
+    html = urllib.request.urlopen(page.url)
+    video_id = re.search(r"watch\?v=(\S{11})",html.read().decode())
+
+    video_id = video_id.group(0).replace("watch?v=","")
+
+    params = {"format": "json", "url": "https://www.youtube.com/watch?v=%s" % video_id}
+    url = "https://www.youtube.com/oembed"
+    query_string = urllib.parse.urlencode(params)
+    url = url + "?" + query_string
+
+    with urllib.request.urlopen(url) as response:
+        response_text = response.read()
+        data = json.loads(response_text.decode())
+        print(data['title'])
+
+    return("https://youtube.com/watch?v=" + video_id), data['title']
 
 

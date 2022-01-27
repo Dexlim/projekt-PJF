@@ -1,18 +1,17 @@
 # Projekt na PJF
 # Zalewski Wojciech WCY19IJ1S1
+# pip install discord.py
+# pip install PyNaCl to use voice
+# pip install youtube_dl
 
-import discord  # pip install discord.py
+import discord
 from discord.ext.commands import Bot
-from scrap import checkPriceRequest
-from scrap import checkFreebies
-from scrap import checkBundles
-from scrap import checkDeals
-from scrap import checkBlog
-from embed import createGameEmbed
-from embed import createInfoEmbed
-from embed import createHelpEmbed
+import asyncio
+import youtube_dl
+from scrap import *
+from embed import *
 
-client = Bot("!")
+client = discord.Client()
 LEFT = '⬅'
 RIGHT = '➡'
 FREEBIE_ICON = "https://i.imgur.com/jWvycKR.png"
@@ -26,7 +25,15 @@ BLOG_COLOR = 0xc91818
 CURRENCY = 'us';
 AVAILABLE_CURRENCIES = ['USD','EUR','PLN','AUD','BRL','CAD','DKK','NOK','RUB','SEK','CHF','GBP']
 
-class Display:
+youtube_dl.utils.bug_reports_message = lambda: '' # hides bug reports
+
+messagesDict = []
+musicQueue = []
+titleQueue = []
+currentSong = ''
+currentTitle = ''
+
+class Display():
     def __init__(self, message, request,type):
         self.message = message
         self.request = request
@@ -41,21 +48,37 @@ class Display:
         if self.page > self.maxPage:
             self.page = 1
 
+def nextSong(voice, message):
+    global currentSong
+    global currentTitle
 
-
-messagesDict = []
-
+    if len(musicQueue) >= 1:
+        currentSong = musicQueue[0]
+        currentTitle = titleQueue[0]
+        voice.play(musicQueue[0], after=lambda e:nextSong(voice, message))
+        try:
+            client.loop.create_task(message.channel.send(content="Now playing: ***" + titleQueue[0]+"***"))
+        except TypeError:
+            pass
+        del musicQueue[0]
+        del titleQueue[0]
+    else:
+        if not voice.is_playing():
+            client.loop.create_task(message.channel.send(content="Queue empty, leaving voice channel."))
+            client.loop.create_task(voice.disconnect())
+    return
 
 @client.event
 async def on_ready():
     print("Logged in as {0.user}".format(client))
-
 
 @client.event
 async def on_message(message):
     global messagesDict
     global CURRENCY
     global AVAILABLE_CURRENCIES
+    global currentTitle
+    global currentSong
     if message.author == client.user:
         return
 
@@ -128,6 +151,7 @@ async def on_message(message):
         await response.add_reaction(LEFT)
         await response.add_reaction(RIGHT)
 
+
     if message.content.startswith("$currency "):
         msg = message.content.split("$currency ", 1)[1]
         msg = msg.upper()
@@ -139,7 +163,101 @@ async def on_message(message):
             await message.channel.send(embed=discord.Embed(title="Could not find currency \"" + msg+
                                                             "\", write $help to check for available currencies", color=0xc70e2d))
 
-    await client.process_commands(message)
+
+    if message.content == "$play":
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        if voice is None:
+            return
+        if voice.is_paused():
+            await message.channel.send(content="Bot has been resumed.", reference=message)
+            voice.resume()
+            return
+
+    if message.content.startswith("$play "):
+        video_link = message.content.split("$play ", 1)[1]
+        channel = message.author.voice.channel
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        response = await message.channel.send(content="Searching for \'" + video_link + "\'...", reference=message)
+        video_link, title = await getYoutubeURL(video_link)
+
+        if voice == None:
+            await channel.connect()
+
+        FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                          'options': '-vn'}
+        ydl_opts = {'format': 'bestaudio'}
+
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_link, download=False)
+            URL = info['formats'][0]['url']
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        song = discord.FFmpegPCMAudio(executable=".\\ffmpeg\\bin\\ffmpeg.exe", source=URL, **FFMPEG_OPTIONS)
+        if not voice.is_playing():
+            try:
+                currentTitle = title
+                currentSong = song
+                voice.play(song, after=lambda e: nextSong(voice, message))
+            except:
+                await response.edit(content="Error downloading a song. Please try again")
+            else:
+                await response.edit(content="Now playing: ***" + title+"***")
+        else:
+            await response.edit(content="Added to queue: ***" + title+"***")
+            musicQueue.append(song)
+            titleQueue.append(title)
+
+    if message.content == "$disconnect":
+        await message.channel.send(content="Bot left the channel.", reference=message)
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        if not voice == None:
+            await voice.disconnect()
+
+    if message.content == "$pause":
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        if voice != None:
+            if voice.is_playing():
+                await message.channel.send(content="Bot has been paused.", reference=message)
+                voice.pause()
+                return
+            elif voice.is_paused():
+                await message.channel.send(content="Bot has been resumed.", reference=message)
+                voice.resume()
+                return
+
+    if message.content == "$stop":
+        await message.channel.send(content="Music queue has been removed", reference=message)
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        voice.stop()
+
+    if message.content == "$skip":
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        if voice != None and voice.is_playing():
+            if len(musicQueue) >= 1:
+                    await message.channel.send(content="Skipped [***"+currentTitle+"***]")
+                    voice.stop()
+            else:
+                await message.channel.send(content="Skipped [***" + currentTitle + "***]")
+                voice.stop()
+                return
+
+    if message.content == "$queue":
+        msg_content='***1. '+currentTitle+" <-- current***\n"
+        counter = 2
+        for title in titleQueue:
+            msg_content+= str(counter) + ". "+title+"\n"
+            counter+=1
+        await message.channel.send(content=msg_content, reference=message)
+
+    if message.content.startswith("$remove "):
+        voice = discord.utils.get(client.voice_clients, guild=message.guild)
+        id = int(message.content.split("$remove ", 1)[1])-2
+        if id == -1:
+            voice.stop()
+        elif len(musicQueue) >= 1:
+            await message.channel.send(content="Removed ***"+titleQueue[id]+"*** from the queue", reference=message)
+            del titleQueue[id]
+            del musicQueue[id]
+
 
 
 @client.event
@@ -193,4 +311,4 @@ async def on_reaction_add(reaction, user):
         return
 
 
-client.run('OTMwMDgyMzAwMDc3NjcwNDYy.YdwspA.GWhFT0o997OFLFgSPrmoghsWjvw')
+client.run('OTMwMDgyMzAwMDc3NjcwNDYy.YdwspA.GWhFT0o997OFLFgSPrmoghsWjvw') # change to env variable later
