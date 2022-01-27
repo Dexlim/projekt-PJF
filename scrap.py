@@ -7,38 +7,40 @@ import re
 import json
 import urllib
 
+
 def to_thread(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         loop = asyncio.get_event_loop()
         callback = partial(func, *args, **kwargs)
         return await loop.run_in_executor(None, callback)
+
     return wrapper
 
-class Request():
-    def __init__(self,title,officialPrice,keyshopPrice,image,link):
+
+class Request:
+    def __init__(self, title, officialprice, keyshopprice, image, link):
         self.title = title
-        self.officialPrice = officialPrice
-        self.keyshopPrice = keyshopPrice
+        self.officialPrice = officialprice
+        self.keyshopPrice = keyshopprice
         self.image = image
         self.link = link
 
-class Info():
-    def __init__(self,link,image,title,info):
+
+class Info:
+    def __init__(self, link, image, title, info):
         self.link = link
         self.image = image
         self.title = title
         self.info = info
 
 
-
-
 @to_thread
-def checkPriceRequest(title,maxCounter,currency):
-    page = requests.get("https://gg.deals/"+currency+"/games/",params=[('title',title)])
+def checkPriceRequest(title, maxcounter, currency):
+    page = requests.get("https://gg.deals/" + currency + "/games/", params=[('title', title)])
     soup = BeautifulSoup(page.content, "lxml")
     counter = 0
-    requestList = []
+    request_list = []
     soup = soup.select_one("div.game-section.section-row.init-dynamicSidebar")
     for game in soup.select("div.game-details-wrapper"):
 
@@ -46,103 +48,99 @@ def checkPriceRequest(title,maxCounter,currency):
         link = "https://gg.deals" + \
                game.select_one('a.action-ext.action-desktop-btn.always-active.action-btn.cta-label-desktop')['href']
         image = game.find_parent('div').select_one('a.main-image > img')['srcset']
-        image = image[image.find(',')+1:image.find('460w')]
+        image = image[image.find(',') + 1:image.find('460w')]
 
-        officialPrice = game.select_one('div.shop-price-wrapper.inline.shop-price-retail')
-        officialPrice = officialPrice.select_one('a.price-content')
-        if (officialPrice is None):
-            officialPrice = "UNAVAILABLE"
+        official_price = game.select_one('div.shop-price-wrapper.inline.shop-price-retail')
+        official_price = official_price.select_one('a.price-content')
+        if official_price is None:
+            official_price = "UNAVAILABLE"
         else:
-            officialPrice = officialPrice.select_one('span.numeric').get_text()
-        if (officialPrice.startswith('~')):
-            officialPrice = officialPrice[1:]
+            official_price = official_price.select_one('span.numeric').get_text()
+        if official_price.startswith('~'):
+            official_price = official_price[1:]
 
-        keyshopPrice = game.select_one('div.shop-price-wrapper.inline.shop-price-keyshops')
-        keyshopPrice = keyshopPrice.select_one('a.price-content')
-        if (keyshopPrice is None):
-            keyshopPrice = "UNAVAILABLE"
+        keyshop_price = game.select_one('div.shop-price-wrapper.inline.shop-price-keyshops')
+        keyshop_price = keyshop_price.select_one('a.price-content')
+        if keyshop_price is None:
+            keyshop_price = "UNAVAILABLE"
         else:
-            keyshopPrice = keyshopPrice.select_one('span.numeric').get_text()
+            keyshop_price = keyshop_price.select_one('span.numeric').get_text()
 
-        if (keyshopPrice.startswith('~')):
-            keyshopPrice = keyshopPrice[1:]
+        if keyshop_price.startswith('~'):
+            keyshop_price = keyshop_price[1:]
 
-        request = Request(title, officialPrice, keyshopPrice, image, link)
-        requestList.append(request)
+        request = Request(title, official_price, keyshop_price, image, link)
+        request_list.append(request)
 
         counter = counter + 1
-        if (counter >= maxCounter):
-            return requestList
-    if len(requestList) < 1:
+        if counter >= maxcounter:
+            return request_list
+    if len(request_list) < 1:
         request = Request("Not found", '', '',
-                          'https://is5-ssl.mzstatic.com/image/thumb/Music114/v4/9b/77/16/9b771654-42cf-de94-6e7d-90ccb3587f4f/artwork.jpg/1200x1200bf-60.jpg',
+                          'https://is5-ssl.mzstatic.com/image/thumb/Music114/v4/9b/77/16/9b771654-42cf-de94-6e7d'
+                          '-90ccb3587f4f/artwork.jpg/1200x1200bf-60.jpg',
                           '')
-        requestList.append(request)
-    return requestList
+        request_list.append(request)
+    return request_list
+
+
+def checkPost(post, post_list):
+    link = "https://gg.deals" + post.select_one('a.full-link')['href']
+    image = post.select_one('div.news-image-wrapper > img')['src']
+    title = post.select_one('h3.news-title > a').get_text()
+    info = post.select_one('div.news-lead').get_text()
+    freebie = Info(link, image, title, info)
+    post_list.append(freebie)
+    return post_list
+
 
 @to_thread
 def checkFreebies():
     page_url = "https://gg.deals/news/freebies/"
     page = requests.get(page_url)
     soup = BeautifulSoup(page.content, "lxml")
-    freebiesList = []
+    freebies_list = []
     soup = soup.select_one('div.list-items.news-list')
     for freebie in soup.select('div.item.news-item.news-list-item.init-trimNewsLead.news-cat-freebie.active'):
-        link = "https://gg.deals" + freebie.select_one('a.full-link')['href']
-        image = freebie.select_one('div.news-image-wrapper > img')['src']
-        title =  freebie.select_one('h3.news-title > a').get_text()
-        info = freebie.select_one('div.news-lead').get_text()
-        freebie = Info(link, image, title, info)
-        freebiesList.append(freebie)
-    return freebiesList
+        freebies_list = checkPost(freebie, freebies_list)
+    return freebies_list
+
 
 @to_thread
 def checkBundles():
     page_url = "https://gg.deals/news/bundles/"
     page = requests.get(page_url)
     soup = BeautifulSoup(page.content, "lxml")
-    bundlesList = []
+    bundles_list = []
     soup = soup.select_one('div.list-items.news-list')
     for bundle in soup.select('div.item.news-item.news-list-item.init-trimNewsLead.news-cat-bundle.active'):
-        link = "https://gg.deals" + bundle.select_one('a.full-link')['href']
-        image = bundle.select_one('div.news-image-wrapper > img')['src']
-        title = bundle.select_one('h3.news-title > a').get_text()
-        info = bundle.select_one('div.news-lead').get_text()
-        bundle = Info(link, image, title, info)
-        bundlesList.append(bundle)
-    return bundlesList
+        bundles_list = checkPost(bundle, bundles_list)
+    return bundles_list
+
 
 @to_thread
 def checkDeals():
     page_url = "https://gg.deals/news/deals/"
     page = requests.get(page_url)
     soup = BeautifulSoup(page.content, "lxml")
-    dealsList = []
+    deals_list = []
     soup = soup.select_one('div.list-items.news-list')
     for deal in soup.select('div.item.news-item.news-list-item.init-trimNewsLead.news-cat-deal.active'):
-        link = "https://gg.deals" + deal.select_one('a.full-link')['href']
-        image = deal.select_one('div.news-image-wrapper > img')['src']
-        title = deal.select_one('h3.news-title > a').get_text()
-        info = deal.select_one('div.news-lead').get_text()
-        deal = Info(link, image, title, info)
-        dealsList.append(deal)
-    return dealsList
+        deals_list = checkPost(deal, deals_list)
+    return deals_list
+
 
 @to_thread
 def checkBlog():
     page_url = "https://gg.deals/news/blog/"
     page = requests.get(page_url)
     soup = BeautifulSoup(page.content, "lxml")
-    dealsList = []
+    blog_list = []
     soup = soup.select_one('div.list-items.news-list')
     for blog in soup.select('div.item.news-item.news-list-item.init-trimNewsLead.news-cat-blog.active'):
-        link = "https://gg.deals" + blog.select_one('a.full-link')['href']
-        image = blog.select_one('div.news-image-wrapper > img')['src']
-        title = blog.select_one('h3.news-title > a').get_text()
-        info = blog.select_one('div.news-lead').get_text()
-        Blog = Info(link, image, title, info)
-        dealsList.append(Blog)
-    return dealsList
+        blog_list = checkPost(blog, blog_list)
+    return blog_list
+
 
 @to_thread
 def getYoutubeURL(text):
@@ -151,10 +149,10 @@ def getYoutubeURL(text):
         video_id = text.split("https://www.youtube.com/watch?v=")[1]
         video_id = video_id[0:video_id.find("&ab_channel=")]
     else:
-        page = requests.get(page_url, params=[('search_query',text)])
+        page = requests.get(page_url, params=[('search_query', text)])
         html = urllib.request.urlopen(page.url)
-        video_id = re.search(r"watch\?v=(\S{11})",html.read().decode())
-        video_id = video_id.group(0).replace("watch?v=","")
+        video_id = re.search(r"watch\?v=(\S{11})", html.read().decode())
+        video_id = video_id.group(0).replace("watch?v=", "")
 
     params = {"format": "json", "url": "https://www.youtube.com/watch?v=%s" % video_id}
     url = "https://www.youtube.com/oembed"
@@ -166,6 +164,4 @@ def getYoutubeURL(text):
         data = json.loads(response_text.decode())
         print(data['title'])
 
-    return("https://youtube.com/watch?v=" + video_id), data['title']
-
-
+    return ("https://youtube.com/watch?v=" + video_id), data['title']
